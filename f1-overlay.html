@@ -92,6 +92,7 @@
     text-shadow: 0 3px 8px rgba(0,0,0,0.8);
     line-height: 1;
     margin: 0;
+    text-transform: capitalize;
   }
 
   /* SESSION ELEMEN */
@@ -103,6 +104,7 @@
     line-height: 1;
     text-shadow: 0 3px 8px rgba(0,0,0,0.8);
     margin: 0;
+    text-transform: capitalize;
   }
 
   .session-text.fp     { color: var(--accent-practice); }
@@ -149,20 +151,32 @@
   };
   const AUTO_REFRESH_MS = 60000;
 
-  const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   function formatDate(iso){
+    if(!iso) return '';
     const d = new Date(iso);
     if(isNaN(d)) return iso;
+    // Format tanggal: 23 Aug 2026
     return `${String(d.getUTCDate()).padStart(2,'0')} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+  }
+
+  // Fungsi sakti buat bikin Title Case (Awal Kata Besar, Sisanya Kecil)
+  function toTitleCase(str) {
+    if (!str) return '';
+    return str.toLowerCase().split(' ').map(word => {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    }).join(' ');
   }
 
   function classifySession(sessionName){
     const s = (sessionName || '').toLowerCase();
-    if(s.includes('sprint') && s.includes('qualif')) return { label: sessionName, cls: 'quali' };
-    if(s.includes('sprint')) return { label: sessionName, cls: 'sprint' };
-    if(s.includes('qualif')) return { label: sessionName, cls: 'quali' };
-    if(s.includes('race'))   return { label: sessionName, cls: 'race' };
-    return { label: sessionName || 'Session', cls: 'fp' };
+    const label = sessionName || 'Race Week';
+    
+    if(s.includes('sprint') && s.includes('qualif')) return { label: label, cls: 'quali' };
+    if(s.includes('sprint')) return { label: label, cls: 'sprint' };
+    if(s.includes('qualif')) return { label: label, cls: 'quali' };
+    if(s.includes('race'))   return { label: label, cls: 'race' };
+    return { label: label, cls: 'fp' };
   }
 
   let lastSignature = '';
@@ -182,13 +196,16 @@
       document.getElementById('flagImg').style.display = 'none';
     }
 
-    document.getElementById('gpName').textContent = data.gpName || 'Grand Prix';
+    // Terapkan Title Case di sini
+    document.getElementById('gpName').textContent = toTitleCase(data.gpName || 'F1 Grand Prix');
     document.getElementById('date').textContent = formatDate(data.dateIso);
 
     const sess = classifySession(data.sessionName);
     const sessionEl = document.getElementById('sessionText');
     sessionEl.className = 'session-text ' + sess.cls;
-    sessionEl.textContent = sess.label;
+    
+    // Terapkan Title Case untuk nama Session juga
+    sessionEl.textContent = toTitleCase(sess.label);
 
     const overlay = document.getElementById('overlay');
     if(!overlay.classList.contains('show')){
@@ -202,28 +219,21 @@
 
   function renderDefault(){
     render({
-      flagEmoji: manual.flag || '🏁',
-      gpName: manual.gp || 'Menunggu jadwal...',
-      sessionName: manual.session || 'STANDBY',
+      flagEmoji: manual.flag || '🏎️',
+      gpName: manual.gp || 'Menunggu Jadwal',
+      sessionName: manual.session || 'Standby',
       dateIso: manual.date || new Date().toISOString(),
     });
   }
 
-  function pickRelevantSession(sessions, now){
-    const live = sessions.find(s => new Date(s.date_start) <= now && now <= new Date(s.date_end));
-    if(live) return { session: live, isLive: true };
-
-    const upcoming = sessions
-      .filter(s => new Date(s.date_start) > now)
-      .sort((a,b) => new Date(a.date_start) - new Date(b.date_start));
-    if(upcoming.length) return { session: upcoming[0], isLive: false };
-
-    const past = sessions
-      .filter(s => new Date(s.date_end) < now)
-      .sort((a,b) => new Date(b.date_start) - new Date(a.date_start));
-    if(past.length) return { session: past[0], isLive: false };
-
-    return null;
+  async function safeFetch(url) {
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   }
 
   async function fetchAndRender(){
@@ -240,29 +250,56 @@
     try{
       const now = new Date();
       const year = now.getUTCFullYear();
+      
       const [sessionsA, sessionsB, meetingsA, meetingsB] = await Promise.all([
-        fetch(`https://api.openf1.org/v1/sessions?year=${year}`).then(r => r.json()),
-        fetch(`https://api.openf1.org/v1/sessions?year=${year + 1}`).then(r => r.json()).catch(() => []),
-        fetch(`https://api.openf1.org/v1/meetings?year=${year}`).then(r => r.json()),
-        fetch(`https://api.openf1.org/v1/meetings?year=${year + 1}`).then(r => r.json()).catch(() => []),
+        safeFetch(`https://api.openf1.org/v1/sessions?year=${year}`),
+        safeFetch(`https://api.openf1.org/v1/sessions?year=${year + 1}`),
+        safeFetch(`https://api.openf1.org/v1/meetings?year=${year}`),
+        safeFetch(`https://api.openf1.org/v1/meetings?year=${year + 1}`)
       ]);
 
       const allSessions = [...sessionsA, ...sessionsB];
       const allMeetings = [...meetingsA, ...meetingsB];
-      const meetingByKey = Object.fromEntries(allMeetings.map(m => [m.meeting_key, m]));
+      
+      if(allMeetings.length === 0) throw new Error('API melimit request / Tidak ada data meeting');
 
-      const picked = pickRelevantSession(allSessions, now);
-      if(!picked) throw new Error('Nggak ada data sesi ditemukan');
+      const liveSess = allSessions.find(s => new Date(s.date_start) <= now && now <= new Date(s.date_end));
+      const upcomingSess = allSessions.filter(s => new Date(s.date_start) > now).sort((a,b) => new Date(a.date_start) - new Date(b.date_start));
+      const pastSess = allSessions.filter(s => new Date(s.date_end) < now).sort((a,b) => new Date(b.date_start) - new Date(a.date_start));
+      
+      let pickedSession = liveSess || upcomingSess[0] || pastSess[0];
 
-      const { session } = picked;
-      const meeting = meetingByKey[session.meeting_key];
+      if (!pickedSession) {
+        const upcomingMeeting = allMeetings.filter(m => new Date(m.date_start) > now).sort((a,b) => new Date(a.date_start) - new Date(b.date_start));
+        const pastMeeting = allMeetings.filter(m => new Date(m.date_start) < now).sort((a,b) => new Date(b.date_start) - new Date(a.date_start));
+        
+        const fallbackMeeting = upcomingMeeting[0] || pastMeeting[0];
+        
+        if (fallbackMeeting) {
+          render({
+            flagUrl: fallbackMeeting.country_flag,
+            gpName: manual.gp || fallbackMeeting.meeting_name,
+            sessionName: manual.session || 'Race Week',
+            dateIso: manual.date || fallbackMeeting.date_start,
+          });
+          return;
+        }
+      }
 
-      render({
-        flagUrl: meeting ? meeting.country_flag : undefined,
-        gpName: manual.gp || (meeting ? meeting.meeting_name : session.location),
-        sessionName: manual.session || session.session_name,
-        dateIso: manual.date || session.date_start,
-      });
+      if (pickedSession) {
+        const meetingByKey = Object.fromEntries(allMeetings.map(m => [m.meeting_key, m]));
+        const meeting = meetingByKey[pickedSession.meeting_key];
+
+        render({
+          flagUrl: meeting ? meeting.country_flag : undefined,
+          gpName: manual.gp || (meeting ? meeting.meeting_name : pickedSession.location),
+          sessionName: manual.session || pickedSession.session_name,
+          dateIso: manual.date || pickedSession.date_start,
+        });
+      } else {
+        throw new Error('Tetap tidak ada jadwal yang sesuai');
+      }
+
     }catch(err){
       console.error('Gagal fetch OpenF1:', err);
       renderDefault();
