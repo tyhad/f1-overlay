@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>F1 Watch-along Overlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  /* =========================================================
+     SESUAIKAN DI SINI biar matching sama desain Illustrator kamu
+     ========================================================= */
+  :root{
+    --text-color:      #F2F1ED;   /* warna teks utama (GP name) */
+    --dim-color:       #A8ACB4;   /* warna teks sekunder (round/date) */
+    --accent-race:     #E10600;   /* warna badge sesi RACE */
+    --accent-quali:    #F2B705;   /* warna badge QUALI / SPRINT QUALI */
+    --accent-sprint:   #FF6A00;   /* warna badge SPRINT */
+    --accent-practice: #5B6672;   /* warna badge FP1/FP2/FP3 */
+    --font-display:    'Oswald', sans-serif;      /* font nama GP */
+    --font-mono:       'JetBrains Mono', monospace; /* font angka/tanggal/kode sesi */
+
+    --flag-size:       46px;   /* ukuran chip bendera */
+    --gp-size:         28px;   /* ukuran font nama GP */
+    --meta-size:       14px;   /* ukuran font round/session/date */
+    --gap:             16px;
+  }
+
+  html,body{
+    margin:0; padding:0;
+    background:transparent;      /* WAJIB transparan biar nembus ke background Illustrator kamu di OBS */
+    overflow:hidden;
+  }
+
+  #overlay{
+    display:flex;
+    align-items:center;
+    gap: var(--gap);
+    width:fit-content;
+    padding:10px 18px;
+    font-family:var(--font-display);
+    opacity:0;
+    transform: translateY(-10px);
+  }
+  #overlay.show{
+    animation: enter .55s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  @keyframes enter{
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  .flag{
+    font-size: var(--flag-size);
+    line-height:1;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,.5));
+  }
+
+  .info{ display:flex; flex-direction:column; gap:4px; }
+
+  .gp-name{
+    font-size: var(--gp-size);
+    font-weight:600;
+    letter-spacing:.02em;
+    text-transform:uppercase;
+    color: var(--text-color);
+    text-shadow: 0 1px 3px rgba(0,0,0,.6);
+    white-space:nowrap;
+  }
+
+  .meta-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family: var(--font-mono);
+    font-size: var(--meta-size);
+    color: var(--dim-color);
+  }
+
+  .session-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:3px 10px;
+    border-radius:3px;
+    font-weight:700;
+    letter-spacing:.06em;
+    color:#111;
+    text-transform:uppercase;
+  }
+  .session-pill.fp   { background: var(--accent-practice); color:#fff; }
+  .session-pill.quali{ background: var(--accent-quali); }
+  .session-pill.sprint{ background: var(--accent-sprint); color:#fff; }
+  .session-pill.race { background: var(--accent-race); color:#fff; }
+
+  .live-dot{
+    width:7px; height:7px; border-radius:50%;
+    background:#fff;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{ opacity:1; } 50%{ opacity:.25; }
+  }
+
+  .round{ opacity:.85; }
+  .date{ letter-spacing:.03em; }
+</style>
+</head>
+<body>
+
+  <div id="overlay">
+    <div class="flag" id="flag">🏁</div>
+    <div class="info">
+      <div class="gp-name" id="gpName">Grand Prix</div>
+      <div class="meta-row">
+        <span class="round" id="round"></span>
+        <span class="session-pill" id="sessionPill"><span class="live-dot" id="liveDot" style="display:none;"></span><span id="sessionLabel">SESSION</span></span>
+        <span class="date" id="date"></span>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ---- kamus kode sesi -> (label ditampilkan, kelas warna) ----
+  const SESSIONS = {
+    fp1:          { label: "FP1",           cls: "fp" },
+    fp2:          { label: "FP2",           cls: "fp" },
+    fp3:          { label: "FP3",           cls: "fp" },
+    quali:        { label: "QUALIFYING",    cls: "quali" },
+    sprintquali:  { label: "SPRINT QUALI",  cls: "quali" },
+    sprint:       { label: "SPRINT",        cls: "sprint" },
+    race:         { label: "RACE",          cls: "race" },
+  };
+
+  const params = new URLSearchParams(window.location.search);
+
+  // ---- default values (biar file ini langsung kelihatan bentuknya walau dibuka tanpa parameter) ----
+  const flagCode = (params.get('flag') || 'BH').toUpperCase();      // kode negara 2 huruf, misal GB, IT, JP, US
+  const gpName   = params.get('gp')      || 'Bahrain Grand Prix';
+  const round    = params.get('round')   || 'ROUND 1';
+  const sessKey  = (params.get('session') || 'race').toLowerCase();
+  const dateStr  = params.get('date')    || '2026-03-08';           // format YYYY-MM-DD
+
+  // kode negara -> emoji bendera
+  function flagEmoji(code){
+    if(!/^[A-Z]{2}$/.test(code)) return code; // kalau user langsung isi emoji, pakai apa adanya
+    const A = 0x1F1E6;
+    return String.fromCodePoint(...[...code].map(c => A + c.charCodeAt(0) - 65));
+  }
+
+  const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  function formatDate(iso){
+    const d = new Date(iso + 'T00:00:00');
+    if(isNaN(d)) return iso;
+    return `${String(d.getDate()).padStart(2,'0')} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  document.getElementById('flag').textContent = flagEmoji(flagCode);
+  document.getElementById('gpName').textContent = gpName;
+  document.getElementById('round').textContent = round.toUpperCase();
+  document.getElementById('date').textContent = formatDate(dateStr);
+
+  const sess = SESSIONS[sessKey] || { label: sessKey.toUpperCase(), cls: 'fp' };
+  const pill = document.getElementById('sessionPill');
+  pill.classList.add(sess.cls);
+  document.getElementById('sessionLabel').textContent = sess.label;
+  if(sess.cls === 'race'){
+    document.getElementById('liveDot').style.display = 'inline-block';
+  }
+
+  requestAnimationFrame(() => {
+    document.getElementById('overlay').classList.add('show');
+  });
+</script>
+
+</body>
+</html>
