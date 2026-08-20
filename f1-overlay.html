@@ -6,30 +6,59 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  /* =========================================================
-     SESUAIKAN DI SINI biar matching sama desain Illustrator kamu
-     ========================================================= */
+  /* =========================================================================
+     PUSAT PENGATURAN — semua yang mau kamu ubah ada di sini.
+     Tiap elemen (FLAG, GP NAME, SESSION, DATE) punya setting sendiri-sendiri:
+     font, ukuran, warna, dan offset posisi (geser dikit dari posisi normalnya).
+     Offset X positif = geser kanan, negatif = geser kiri.
+     Offset Y positif = geser bawah, negatif = geser atas.
+     ========================================================================= */
   :root{
-    --text-color:      #F2F1ED;
-    --dim-color:       #A8ACB4;
-    --accent-race:     #E10600;
-    --accent-quali:    #F2B705;
-    --accent-sprint:   #FF6A00;
-    --accent-practice: #5B6672;
-    --font-display:    'Oswald', sans-serif;
-    --font-mono:       'JetBrains Mono', monospace;
+    /* ---------- FLAG ---------- */
+    --flag-size:        46px;
+    --flag-offset-x:     0px;
+    --flag-offset-y:     0px;
 
-    --flag-size:       46px;
-    --gp-size:         28px;
-    --meta-size:       14px;
-    --gap:             16px;
-  }
+    /* ---------- GP NAME (contoh: "BAHRAIN GRAND PRIX") ---------- */
+    --gp-font:      'Oswald', sans-serif;
+    --gp-size:          28px;
+    --gp-weight:         600;
+    --gp-color:       #F2F1ED;
+    --gp-offset-x:       0px;
+    --gp-offset-y:       0px;
 
-  html,body{
-    margin:0; padding:0;
-    background:transparent;
-    overflow:hidden;
+    /* ---------- ROUND (contoh: "ROUND 3") ---------- */
+    --round-font:   'JetBrains Mono', monospace;
+    --round-size:       14px;
+    --round-weight:      500;
+    --round-color:    #A8ACB4;
+    --round-offset-x:    0px;
+    --round-offset-y:    0px;
+
+    /* ---------- SESSION BADGE (contoh: "QUALIFYING") ---------- */
+    --session-font: 'JetBrains Mono', monospace;
+    --session-size:     14px;
+    --session-weight:   700;
+    --session-offset-x:  0px;
+    --session-offset-y:  0px;
+    --accent-race:    #E10600;   /* warna badge saat RACE */
+    --accent-quali:   #F2B705;   /* warna badge saat QUALI / SPRINT QUALI */
+    --accent-sprint:  #FF6A00;   /* warna badge saat SPRINT */
+    --accent-practice:#5B6672;   /* warna badge saat FP1/FP2/FP3 */
+
+    /* ---------- DATE (contoh: "23 AUG 2026") ---------- */
+    --date-font:    'JetBrains Mono', monospace;
+    --date-size:        14px;
+    --date-weight:       500;
+    --date-color:     #A8ACB4;
+    --date-offset-x:     0px;
+    --date-offset-y:     0px;
+
+    --gap: 16px; /* jarak horizontal antara flag dan blok teks */
   }
+  /* ========================================================================= */
+
+  html,body{ margin:0; padding:0; background:transparent; overflow:hidden; }
 
   #overlay{
     display:flex;
@@ -37,7 +66,6 @@
     gap: var(--gap);
     width:fit-content;
     padding:10px 18px;
-    font-family:var(--font-display);
     opacity:0;
     transform: translateY(-10px);
   }
@@ -48,6 +76,7 @@
     font-size: var(--flag-size);
     line-height:1;
     filter: drop-shadow(0 1px 2px rgba(0,0,0,.5));
+    position:relative; left: var(--flag-offset-x); top: var(--flag-offset-y);
   }
   .flag-img{
     height: var(--flag-size);
@@ -55,40 +84,44 @@
     object-fit: cover;
     border-radius:4px;
     box-shadow: 0 1px 4px rgba(0,0,0,.5);
-    display:none; /* dimunculin lewat JS kalau pakai gambar bendera dari API */
+    display:none;
+    position:relative; left: var(--flag-offset-x); top: var(--flag-offset-y);
   }
 
   .info{ display:flex; flex-direction:column; gap:4px; }
 
   .gp-name{
+    font-family: var(--gp-font);
     font-size: var(--gp-size);
-    font-weight:600;
+    font-weight: var(--gp-weight);
+    color: var(--gp-color);
     letter-spacing:.02em;
     text-transform:uppercase;
-    color: var(--text-color);
     text-shadow: 0 1px 3px rgba(0,0,0,.6);
     white-space:nowrap;
+    position:relative; left: var(--gp-offset-x); top: var(--gp-offset-y);
   }
 
-  .meta-row{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-family: var(--font-mono);
-    font-size: var(--meta-size);
-    color: var(--dim-color);
+  .meta-row{ display:flex; align-items:center; gap:10px; }
+
+  .round{
+    font-family: var(--round-font);
+    font-size: var(--round-size);
+    font-weight: var(--round-weight);
+    color: var(--round-color);
+    position:relative; left: var(--round-offset-x); top: var(--round-offset-y);
   }
 
   .session-pill{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    padding:3px 10px;
-    border-radius:3px;
-    font-weight:700;
+    display:inline-flex; align-items:center; gap:6px;
+    padding:3px 10px; border-radius:3px;
+    font-family: var(--session-font);
+    font-size: var(--session-size);
+    font-weight: var(--session-weight);
     letter-spacing:.06em;
-    color:#111;
     text-transform:uppercase;
+    color:#111;
+    position:relative; left: var(--session-offset-x); top: var(--session-offset-y);
   }
   .session-pill.fp    { background: var(--accent-practice); color:#fff; }
   .session-pill.quali { background: var(--accent-quali); }
@@ -96,16 +129,20 @@
   .session-pill.race  { background: var(--accent-race); color:#fff; }
 
   .live-dot{
-    width:7px; height:7px; border-radius:50%;
-    background:#fff;
+    width:7px; height:7px; border-radius:50%; background:#fff;
     animation: pulse 1.2s ease-in-out infinite;
   }
   @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.25; } }
 
-  .round{ opacity:.85; }
-  .date{ letter-spacing:.03em; }
+  .date{
+    font-family: var(--date-font);
+    font-size: var(--date-size);
+    font-weight: var(--date-weight);
+    color: var(--date-color);
+    letter-spacing:.03em;
+    position:relative; left: var(--date-offset-x); top: var(--date-offset-y);
+  }
 
-  /* flash halus tiap kali data berubah, kayak update di timing tower */
   .flash{ animation: flash .6s ease-out; }
   @keyframes flash{
     0%{ text-shadow: 0 0 12px rgba(255,255,255,.9); }
@@ -130,8 +167,6 @@
 
 <script>
   const params = new URLSearchParams(window.location.search);
-
-  // Kalau ada parameter manual di URL, itu jadi MODE MANUAL (auto-fetch dimatiin buat field yang di-override).
   const manual = {
     flag:    params.get('flag'),
     gp:      params.get('gp'),
@@ -139,7 +174,7 @@
     session: params.get('session'),
     date:    params.get('date'),
   };
-  const AUTO_REFRESH_MS = 45000; // polling tiap 45 detik, cukup buat nangkep pergantian sesi
+  const AUTO_REFRESH_MS = 60000; // cek ulang tiap 60 detik
 
   const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
   function formatDate(iso){
@@ -160,7 +195,6 @@
   let lastSignature = '';
 
   function render(data){
-    // data = { flagUrl, flagEmoji, gpName, round, sessionName, dateIso }
     const signature = JSON.stringify(data);
     const changed = signature !== lastSignature;
     lastSignature = signature;
@@ -190,24 +224,42 @@
       requestAnimationFrame(() => overlay.classList.add('show'));
     } else if(changed){
       document.getElementById('gpName').classList.remove('flash');
-      void document.getElementById('gpName').offsetWidth; // restart animasi
+      void document.getElementById('gpName').offsetWidth;
       document.getElementById('gpName').classList.add('flash');
     }
   }
 
-  // ---- fallback kalau fetch API gagal / belum ada data ----
   function renderDefault(){
     render({
       flagEmoji: manual.flag || '🏁',
-      gpName: manual.gp || 'Menunggu sesi berikutnya...',
+      gpName: manual.gp || 'Menunggu jadwal...',
       round: manual.round || '',
       sessionName: manual.session || 'STANDBY',
       dateIso: manual.date || new Date().toISOString(),
     });
   }
 
+  // ---- Cari sesi yang paling relevan: yang lagi berlangsung sekarang,
+  //      atau kalau nggak ada, sesi TERDEKAT berikutnya di masa depan.
+  //      Kalau musim udah selesai semua, fallback ke sesi terakhir yang udah lewat. ----
+  function pickRelevantSession(sessions, now){
+    const live = sessions.find(s => new Date(s.date_start) <= now && now <= new Date(s.date_end));
+    if(live) return { session: live, isLive: true };
+
+    const upcoming = sessions
+      .filter(s => new Date(s.date_start) > now)
+      .sort((a,b) => new Date(a.date_start) - new Date(b.date_start));
+    if(upcoming.length) return { session: upcoming[0], isLive: false };
+
+    const past = sessions
+      .filter(s => new Date(s.date_end) < now)
+      .sort((a,b) => new Date(b.date_start) - new Date(a.date_start));
+    if(past.length) return { session: past[0], isLive: false };
+
+    return null;
+  }
+
   async function fetchAndRender(){
-    // Kalau SEMUA field udah di-override manual, nggak perlu fetch API sama sekali.
     if(manual.gp && manual.session && manual.date){
       render({
         flagEmoji: manual.flag || '🏁',
@@ -220,20 +272,29 @@
     }
 
     try{
-      const [meetingsRes, sessionsRes] = await Promise.all([
-        fetch('https://api.openf1.org/v1/meetings?meeting_key=latest'),
-        fetch('https://api.openf1.org/v1/sessions?session_key=latest'),
+      const now = new Date();
+      const year = now.getUTCFullYear();
+      // Ambil tahun ini + tahun depan, biar pas jeda akhir musim tetap nangkep GP pertama musim berikutnya.
+      const [sessionsA, sessionsB, meetingsA, meetingsB] = await Promise.all([
+        fetch(`https://api.openf1.org/v1/sessions?year=${year}`).then(r => r.json()),
+        fetch(`https://api.openf1.org/v1/sessions?year=${year + 1}`).then(r => r.json()).catch(() => []),
+        fetch(`https://api.openf1.org/v1/meetings?year=${year}`).then(r => r.json()),
+        fetch(`https://api.openf1.org/v1/meetings?year=${year + 1}`).then(r => r.json()).catch(() => []),
       ]);
-      const meetings = await meetingsRes.json();
-      const sessions = await sessionsRes.json();
-      const meeting = meetings[0];
-      const session = sessions[0];
 
-      if(!meeting || !session) throw new Error('Belum ada data meeting/session dari OpenF1');
+      const allSessions = [...sessionsA, ...sessionsB];
+      const allMeetings = [...meetingsA, ...meetingsB];
+      const meetingByKey = Object.fromEntries(allMeetings.map(m => [m.meeting_key, m]));
+
+      const picked = pickRelevantSession(allSessions, now);
+      if(!picked) throw new Error('Nggak ada data sesi ditemukan');
+
+      const { session } = picked;
+      const meeting = meetingByKey[session.meeting_key];
 
       render({
-        flagUrl: meeting.country_flag,
-        gpName: manual.gp || meeting.meeting_name,
+        flagUrl: meeting ? meeting.country_flag : undefined,
+        gpName: manual.gp || (meeting ? meeting.meeting_name : session.location),
         round: manual.round || '',
         sessionName: manual.session || session.session_name,
         dateIso: manual.date || session.date_start,
