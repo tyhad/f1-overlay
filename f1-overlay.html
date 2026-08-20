@@ -10,24 +10,24 @@
      SESUAIKAN DI SINI biar matching sama desain Illustrator kamu
      ========================================================= */
   :root{
-    --text-color:      #F2F1ED;   /* warna teks utama (GP name) */
-    --dim-color:       #A8ACB4;   /* warna teks sekunder (round/date) */
-    --accent-race:     #E10600;   /* warna badge sesi RACE */
-    --accent-quali:    #F2B705;   /* warna badge QUALI / SPRINT QUALI */
-    --accent-sprint:   #FF6A00;   /* warna badge SPRINT */
-    --accent-practice: #5B6672;   /* warna badge FP1/FP2/FP3 */
-    --font-display:    'Oswald', sans-serif;      /* font nama GP */
-    --font-mono:       'JetBrains Mono', monospace; /* font angka/tanggal/kode sesi */
+    --text-color:      #F2F1ED;
+    --dim-color:       #A8ACB4;
+    --accent-race:     #E10600;
+    --accent-quali:    #F2B705;
+    --accent-sprint:   #FF6A00;
+    --accent-practice: #5B6672;
+    --font-display:    'Oswald', sans-serif;
+    --font-mono:       'JetBrains Mono', monospace;
 
-    --flag-size:       46px;   /* ukuran chip bendera */
-    --gp-size:         28px;   /* ukuran font nama GP */
-    --meta-size:       14px;   /* ukuran font round/session/date */
+    --flag-size:       46px;
+    --gp-size:         28px;
+    --meta-size:       14px;
     --gap:             16px;
   }
 
   html,body{
     margin:0; padding:0;
-    background:transparent;      /* WAJIB transparan biar nembus ke background Illustrator kamu di OBS */
+    background:transparent;
     overflow:hidden;
   }
 
@@ -41,17 +41,21 @@
     opacity:0;
     transform: translateY(-10px);
   }
-  #overlay.show{
-    animation: enter .55s cubic-bezier(.2,.8,.2,1) forwards;
-  }
-  @keyframes enter{
-    to{ opacity:1; transform:translateY(0); }
-  }
+  #overlay.show{ animation: enter .55s cubic-bezier(.2,.8,.2,1) forwards; }
+  @keyframes enter{ to{ opacity:1; transform:translateY(0); } }
 
-  .flag{
+  .flag-emoji{
     font-size: var(--flag-size);
     line-height:1;
     filter: drop-shadow(0 1px 2px rgba(0,0,0,.5));
+  }
+  .flag-img{
+    height: var(--flag-size);
+    width: calc(var(--flag-size) * 1.5);
+    object-fit: cover;
+    border-radius:4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.5);
+    display:none; /* dimunculin lewat JS kalau pakai gambar bendera dari API */
   }
 
   .info{ display:flex; flex-direction:column; gap:4px; }
@@ -86,28 +90,34 @@
     color:#111;
     text-transform:uppercase;
   }
-  .session-pill.fp   { background: var(--accent-practice); color:#fff; }
-  .session-pill.quali{ background: var(--accent-quali); }
+  .session-pill.fp    { background: var(--accent-practice); color:#fff; }
+  .session-pill.quali { background: var(--accent-quali); }
   .session-pill.sprint{ background: var(--accent-sprint); color:#fff; }
-  .session-pill.race { background: var(--accent-race); color:#fff; }
+  .session-pill.race  { background: var(--accent-race); color:#fff; }
 
   .live-dot{
     width:7px; height:7px; border-radius:50%;
     background:#fff;
     animation: pulse 1.2s ease-in-out infinite;
   }
-  @keyframes pulse{
-    0%,100%{ opacity:1; } 50%{ opacity:.25; }
-  }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.25; } }
 
   .round{ opacity:.85; }
   .date{ letter-spacing:.03em; }
+
+  /* flash halus tiap kali data berubah, kayak update di timing tower */
+  .flash{ animation: flash .6s ease-out; }
+  @keyframes flash{
+    0%{ text-shadow: 0 0 12px rgba(255,255,255,.9); }
+    100%{ text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  }
 </style>
 </head>
 <body>
 
   <div id="overlay">
-    <div class="flag" id="flag">🏁</div>
+    <div class="flag-emoji" id="flagEmoji">🏁</div>
+    <img class="flag-img" id="flagImg" alt="flag">
     <div class="info">
       <div class="gp-name" id="gpName">Grand Prix</div>
       <div class="meta-row">
@@ -119,56 +129,123 @@
   </div>
 
 <script>
-  // ---- kamus kode sesi -> (label ditampilkan, kelas warna) ----
-  const SESSIONS = {
-    fp1:          { label: "FP1",           cls: "fp" },
-    fp2:          { label: "FP2",           cls: "fp" },
-    fp3:          { label: "FP3",           cls: "fp" },
-    quali:        { label: "QUALIFYING",    cls: "quali" },
-    sprintquali:  { label: "SPRINT QUALI",  cls: "quali" },
-    sprint:       { label: "SPRINT",        cls: "sprint" },
-    race:         { label: "RACE",          cls: "race" },
-  };
-
   const params = new URLSearchParams(window.location.search);
 
-  // ---- default values (biar file ini langsung kelihatan bentuknya walau dibuka tanpa parameter) ----
-  const flagCode = (params.get('flag') || 'BH').toUpperCase();      // kode negara 2 huruf, misal GB, IT, JP, US
-  const gpName   = params.get('gp')      || 'Bahrain Grand Prix';
-  const round    = params.get('round')   || 'ROUND 1';
-  const sessKey  = (params.get('session') || 'race').toLowerCase();
-  const dateStr  = params.get('date')    || '2026-03-08';           // format YYYY-MM-DD
-
-  // kode negara -> emoji bendera
-  function flagEmoji(code){
-    if(!/^[A-Z]{2}$/.test(code)) return code; // kalau user langsung isi emoji, pakai apa adanya
-    const A = 0x1F1E6;
-    return String.fromCodePoint(...[...code].map(c => A + c.charCodeAt(0) - 65));
-  }
+  // Kalau ada parameter manual di URL, itu jadi MODE MANUAL (auto-fetch dimatiin buat field yang di-override).
+  const manual = {
+    flag:    params.get('flag'),
+    gp:      params.get('gp'),
+    round:   params.get('round'),
+    session: params.get('session'),
+    date:    params.get('date'),
+  };
+  const AUTO_REFRESH_MS = 45000; // polling tiap 45 detik, cukup buat nangkep pergantian sesi
 
   const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
   function formatDate(iso){
-    const d = new Date(iso + 'T00:00:00');
+    const d = new Date(iso);
     if(isNaN(d)) return iso;
-    return `${String(d.getDate()).padStart(2,'0')} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+    return `${String(d.getUTCDate()).padStart(2,'0')} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
   }
 
-  document.getElementById('flag').textContent = flagEmoji(flagCode);
-  document.getElementById('gpName').textContent = gpName;
-  document.getElementById('round').textContent = round.toUpperCase();
-  document.getElementById('date').textContent = formatDate(dateStr);
-
-  const sess = SESSIONS[sessKey] || { label: sessKey.toUpperCase(), cls: 'fp' };
-  const pill = document.getElementById('sessionPill');
-  pill.classList.add(sess.cls);
-  document.getElementById('sessionLabel').textContent = sess.label;
-  if(sess.cls === 'race'){
-    document.getElementById('liveDot').style.display = 'inline-block';
+  function classifySession(sessionName){
+    const s = (sessionName || '').toLowerCase();
+    if(s.includes('sprint') && s.includes('qualif')) return { label: sessionName.toUpperCase(), cls: 'quali' };
+    if(s.includes('sprint')) return { label: sessionName.toUpperCase(), cls: 'sprint' };
+    if(s.includes('qualif')) return { label: sessionName.toUpperCase(), cls: 'quali' };
+    if(s.includes('race'))   return { label: sessionName.toUpperCase(), cls: 'race' };
+    return { label: (sessionName || 'SESSION').toUpperCase(), cls: 'fp' };
   }
 
-  requestAnimationFrame(() => {
-    document.getElementById('overlay').classList.add('show');
-  });
+  let lastSignature = '';
+
+  function render(data){
+    // data = { flagUrl, flagEmoji, gpName, round, sessionName, dateIso }
+    const signature = JSON.stringify(data);
+    const changed = signature !== lastSignature;
+    lastSignature = signature;
+
+    if(data.flagUrl){
+      document.getElementById('flagImg').src = data.flagUrl;
+      document.getElementById('flagImg').style.display = 'block';
+      document.getElementById('flagEmoji').style.display = 'none';
+    } else {
+      document.getElementById('flagEmoji').textContent = data.flagEmoji || '🏁';
+      document.getElementById('flagEmoji').style.display = 'block';
+      document.getElementById('flagImg').style.display = 'none';
+    }
+
+    document.getElementById('gpName').textContent = data.gpName || 'Grand Prix';
+    document.getElementById('round').textContent = data.round ? data.round.toUpperCase() : '';
+    document.getElementById('date').textContent = formatDate(data.dateIso);
+
+    const sess = classifySession(data.sessionName);
+    const pill = document.getElementById('sessionPill');
+    pill.className = 'session-pill ' + sess.cls;
+    document.getElementById('sessionLabel').textContent = sess.label;
+    document.getElementById('liveDot').style.display = sess.cls === 'race' ? 'inline-block' : 'none';
+
+    const overlay = document.getElementById('overlay');
+    if(!overlay.classList.contains('show')){
+      requestAnimationFrame(() => overlay.classList.add('show'));
+    } else if(changed){
+      document.getElementById('gpName').classList.remove('flash');
+      void document.getElementById('gpName').offsetWidth; // restart animasi
+      document.getElementById('gpName').classList.add('flash');
+    }
+  }
+
+  // ---- fallback kalau fetch API gagal / belum ada data ----
+  function renderDefault(){
+    render({
+      flagEmoji: manual.flag || '🏁',
+      gpName: manual.gp || 'Menunggu sesi berikutnya...',
+      round: manual.round || '',
+      sessionName: manual.session || 'STANDBY',
+      dateIso: manual.date || new Date().toISOString(),
+    });
+  }
+
+  async function fetchAndRender(){
+    // Kalau SEMUA field udah di-override manual, nggak perlu fetch API sama sekali.
+    if(manual.gp && manual.session && manual.date){
+      render({
+        flagEmoji: manual.flag || '🏁',
+        gpName: manual.gp,
+        round: manual.round || '',
+        sessionName: manual.session,
+        dateIso: manual.date,
+      });
+      return;
+    }
+
+    try{
+      const [meetingsRes, sessionsRes] = await Promise.all([
+        fetch('https://api.openf1.org/v1/meetings?meeting_key=latest'),
+        fetch('https://api.openf1.org/v1/sessions?session_key=latest'),
+      ]);
+      const meetings = await meetingsRes.json();
+      const sessions = await sessionsRes.json();
+      const meeting = meetings[0];
+      const session = sessions[0];
+
+      if(!meeting || !session) throw new Error('Belum ada data meeting/session dari OpenF1');
+
+      render({
+        flagUrl: meeting.country_flag,
+        gpName: manual.gp || meeting.meeting_name,
+        round: manual.round || '',
+        sessionName: manual.session || session.session_name,
+        dateIso: manual.date || session.date_start,
+      });
+    }catch(err){
+      console.error('Gagal fetch OpenF1:', err);
+      renderDefault();
+    }
+  }
+
+  fetchAndRender();
+  setInterval(fetchAndRender, AUTO_REFRESH_MS);
 </script>
 
 </body>
