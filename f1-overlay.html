@@ -5,149 +5,146 @@
 <title>F1 Watch-along Overlay</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@800&family=Quicksand:wght@400&display=swap" rel="stylesheet">
 <style>
   /* =========================================================================
-     PUSAT PENGATURAN — semua yang mau kamu ubah ada di sini.
-     Tiap elemen (FLAG, GP NAME, SESSION, DATE) punya setting sendiri-sendiri:
-     font, ukuran, warna, dan offset posisi (geser dikit dari posisi normalnya).
-     Offset X positif = geser kanan, negatif = geser kiri.
-     Offset Y positif = geser bawah, negatif = geser atas.
+     PUSAT PENGATURAN DESAIN (Sesuai Spesifikasi)
      ========================================================================= */
-  :root{
-    /* ---------- FLAG ---------- */
-    --flag-size:        100px;
-    --flag-offset-x:    540px;
-    --flag-offset-y:    1475px;
+  :root {
+    /* FLAG: X:540px Y:1475px Size:100px */
+    --flag-x: 540px;
+    --flag-y: 1475px;
+    --flag-size: 100px;
 
-    /* ---------- GP NAME (contoh: "BAHRAIN GRAND PRIX") ---------- */
-    --gp-font:      'Manrope ExtraBold', sans-serif;
-    --gp-size:          80px;
-    --gp-weight:         600;
-    --gp-color:       #F2F1ED;
-    --gp-offset-x:       540px;
-    --gp-offset-y:       1600px;
+    /* GP NAME: X:540px Y:1600px Size:80pt Font:Manrope ExtraBold */
+    --gp-x: 540px;
+    --gp-y: 1600px;
+    --gp-font: 'Manrope', sans-serif;
+    --gp-size: 80pt;
+    --gp-weight: 800;
+    --gp-color: #F2F1ED;
 
-    /* ---------- ROUND (contoh: "ROUND 3") ---------- */
-    --round-font:   'JetBrains Mono', monospace;
-    --round-size:       14px;
-    --round-weight:      500;
-    --round-color:    #A8ACB4;
-    --round-offset-x:    0px;
-    --round-offset-y:    0px;
+    /* SESSION: X:540px Y:1675px Size: 75pt Font:Manrope ExtraBold */
+    --session-x: 540px;
+    --session-y: 1675px;
+    --session-font: 'Manrope', sans-serif;
+    --session-size: 75pt;
+    --session-weight: 800;
 
-    /* ---------- SESSION BADGE (contoh: "QUALIFYING") ---------- */
-    --session-font: 'JetBrains Mono', monospace;
-    --session-size:     14px;
-    --session-weight:   700;
-    --session-offset-x:  0px;
-    --session-offset-y:  0px;
-    --accent-race:    #E10600;   /* warna badge saat RACE */
-    --accent-quali:   #F2B705;   /* warna badge saat QUALI / SPRINT QUALI */
-    --accent-sprint:  #FF6A00;   /* warna badge saat SPRINT */
-    --accent-practice:#5B6672;   /* warna badge saat FP1/FP2/FP3 */
+    /* Warna teks dinamis untuk Session */
+    --accent-race:     #E10600;
+    --accent-quali:    #F2B705;
+    --accent-sprint:   #FF6A00;
+    --accent-practice: #A8ACB4;
 
-    /* ---------- DATE (contoh: "23 AUG 2026") ---------- */
-    --date-font:    'JetBrains Mono', monospace;
-    --date-size:        14px;
-    --date-weight:       500;
-    --date-color:     #A8ACB4;
-    --date-offset-x:     0px;
-    --date-offset-y:     0px;
-
-    --gap: 16px; /* jarak horizontal antara flag dan blok teks */
+    /* DATE: X:540px Y:1750px Size:50pt Font:Quicksand Regular */
+    --date-x: 540px;
+    --date-y: 1750px;
+    --date-font: 'Quicksand', sans-serif;
+    --date-size: 50pt;
+    --date-weight: 400;
+    --date-color: #A8ACB4;
   }
-  /* ========================================================================= */
 
-  html,body{ margin:0; padding:0; background:transparent; overflow:hidden; }
-
-  #overlay{
-    display:flex;
-    align-items:center;
-    gap: var(--gap);
-    width:fit-content;
-    padding:10px 18px;
-    opacity:0;
-    transform: translateY(-10px);
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
   }
-  #overlay.show{ animation: enter .55s cubic-bezier(.2,.8,.2,1) forwards; }
-  @keyframes enter{ to{ opacity:1; transform:translateY(0); } }
 
-  .flag-emoji{
+  #overlay {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+  }
+
+  #overlay.show {
+    animation: enter .55s cubic-bezier(.2, .8, .2, 1) forwards;
+  }
+
+  @keyframes enter {
+    to { opacity: 1; }
+  }
+
+  /* FLAG ELEMEN */
+  .flag-emoji {
+    position: absolute;
+    left: var(--flag-x);
+    top: var(--flag-y);
     font-size: var(--flag-size);
-    line-height:1;
-    filter: drop-shadow(0 1px 2px rgba(0,0,0,.5));
-    position:relative; left: var(--flag-offset-x); top: var(--flag-offset-y);
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
   }
-  .flag-img{
+
+  .flag-img {
+    position: absolute;
+    left: var(--flag-x);
+    top: var(--flag-y);
     height: var(--flag-size);
-    width: calc(var(--flag-size) * 1.5);
-    object-fit: cover;
-    border-radius:4px;
-    box-shadow: 0 1px 4px rgba(0,0,0,.5);
-    display:none;
-    position:relative; left: var(--flag-offset-x); top: var(--flag-offset-y);
+    width: auto;
+    object-fit: contain;
+    display: none;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
   }
 
-  .info{ display:flex; flex-direction:column; gap:4px; }
-
-  .gp-name{
+  /* GP NAME ELEMEN */
+  .gp-name {
+    position: absolute;
+    left: var(--gp-x);
+    top: var(--gp-y);
     font-family: var(--gp-font);
     font-size: var(--gp-size);
     font-weight: var(--gp-weight);
     color: var(--gp-color);
-    letter-spacing:.02em;
-    text-transform:uppercase;
-    text-shadow: 0 1px 3px rgba(0,0,0,.6);
-    white-space:nowrap;
-    position:relative; left: var(--gp-offset-x); top: var(--gp-offset-y);
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    text-shadow: 0 2px 6px rgba(0,0,0,.6);
+    white-space: nowrap;
+    line-height: 1;
   }
 
-  .meta-row{ display:flex; align-items:center; gap:10px; }
-
-  .round{
-    font-family: var(--round-font);
-    font-size: var(--round-size);
-    font-weight: var(--round-weight);
-    color: var(--round-color);
-    position:relative; left: var(--round-offset-x); top: var(--round-offset-y);
-  }
-
-  .session-pill{
-    display:inline-flex; align-items:center; gap:6px;
-    padding:3px 10px; border-radius:3px;
+  /* SESSION ELEMEN */
+  .session-text {
+    position: absolute;
+    left: var(--session-x);
+    top: var(--session-y);
     font-family: var(--session-font);
     font-size: var(--session-size);
     font-weight: var(--session-weight);
-    letter-spacing:.06em;
-    text-transform:uppercase;
-    color:#111;
-    position:relative; left: var(--session-offset-x); top: var(--session-offset-y);
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    line-height: 1;
+    white-space: nowrap;
+    text-shadow: 0 2px 6px rgba(0,0,0,.6);
   }
-  .session-pill.fp    { background: var(--accent-practice); color:#fff; }
-  .session-pill.quali { background: var(--accent-quali); }
-  .session-pill.sprint{ background: var(--accent-sprint); color:#fff; }
-  .session-pill.race  { background: var(--accent-race); color:#fff; }
 
-  .live-dot{
-    width:7px; height:7px; border-radius:50%; background:#fff;
-    animation: pulse 1.2s ease-in-out infinite;
-  }
-  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.25; } }
+  .session-text.fp     { color: var(--accent-practice); }
+  .session-text.quali  { color: var(--accent-quali); }
+  .session-text.sprint { color: var(--accent-sprint); }
+  .session-text.race   { color: var(--accent-race); }
 
-  .date{
+  /* DATE ELEMEN */
+  .date {
+    position: absolute;
+    left: var(--date-x);
+    top: var(--date-y);
     font-family: var(--date-font);
     font-size: var(--date-size);
     font-weight: var(--date-weight);
     color: var(--date-color);
-    letter-spacing:.03em;
-    position:relative; left: var(--date-offset-x); top: var(--date-offset-y);
+    line-height: 1;
+    white-space: nowrap;
+    text-shadow: 0 1px 4px rgba(0,0,0,.5);
   }
 
-  .flash{ animation: flash .6s ease-out; }
-  @keyframes flash{
-    0%{ text-shadow: 0 0 12px rgba(255,255,255,.9); }
-    100%{ text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  .flash { animation: flash .6s ease-out; }
+  @keyframes flash {
+    0% { text-shadow: 0 0 20px rgba(255,255,255,.9); }
+    100% { text-shadow: 0 2px 6px rgba(0,0,0,.6); }
   }
 </style>
 </head>
@@ -156,14 +153,10 @@
   <div id="overlay">
     <div class="flag-emoji" id="flagEmoji">🏁</div>
     <img class="flag-img" id="flagImg" alt="flag">
-    <div class="info">
-      <div class="gp-name" id="gpName">Grand Prix</div>
-      <div class="meta-row">
-        <span class="round" id="round"></span>
-        <span class="session-pill" id="sessionPill"><span class="live-dot" id="liveDot" style="display:none;"></span><span id="sessionLabel">SESSION</span></span>
-        <span class="date" id="date"></span>
-      </div>
-    </div>
+    
+    <div class="gp-name" id="gpName">Grand Prix</div>
+    <div class="session-text" id="sessionText">SESSION</div>
+    <div class="date" id="date"></div>
   </div>
 
 <script>
@@ -175,7 +168,7 @@
     session: params.get('session'),
     date:    params.get('date'),
   };
-  const AUTO_REFRESH_MS = 60000; // cek ulang tiap 60 detik
+  const AUTO_REFRESH_MS = 60000;
 
   const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
   function formatDate(iso){
@@ -211,14 +204,12 @@
     }
 
     document.getElementById('gpName').textContent = data.gpName || 'Grand Prix';
-    document.getElementById('round').textContent = data.round ? data.round.toUpperCase() : '';
     document.getElementById('date').textContent = formatDate(data.dateIso);
 
     const sess = classifySession(data.sessionName);
-    const pill = document.getElementById('sessionPill');
-    pill.className = 'session-pill ' + sess.cls;
-    document.getElementById('sessionLabel').textContent = sess.label;
-    document.getElementById('liveDot').style.display = sess.cls === 'race' ? 'inline-block' : 'none';
+    const sessionEl = document.getElementById('sessionText');
+    sessionEl.className = 'session-text ' + sess.cls;
+    sessionEl.textContent = sess.label;
 
     const overlay = document.getElementById('overlay');
     if(!overlay.classList.contains('show')){
@@ -234,15 +225,11 @@
     render({
       flagEmoji: manual.flag || '🏁',
       gpName: manual.gp || 'Menunggu jadwal...',
-      round: manual.round || '',
       sessionName: manual.session || 'STANDBY',
       dateIso: manual.date || new Date().toISOString(),
     });
   }
 
-  // ---- Cari sesi yang paling relevan: yang lagi berlangsung sekarang,
-  //      atau kalau nggak ada, sesi TERDEKAT berikutnya di masa depan.
-  //      Kalau musim udah selesai semua, fallback ke sesi terakhir yang udah lewat. ----
   function pickRelevantSession(sessions, now){
     const live = sessions.find(s => new Date(s.date_start) <= now && now <= new Date(s.date_end));
     if(live) return { session: live, isLive: true };
@@ -265,7 +252,6 @@
       render({
         flagEmoji: manual.flag || '🏁',
         gpName: manual.gp,
-        round: manual.round || '',
         sessionName: manual.session,
         dateIso: manual.date,
       });
@@ -275,7 +261,6 @@
     try{
       const now = new Date();
       const year = now.getUTCFullYear();
-      // Ambil tahun ini + tahun depan, biar pas jeda akhir musim tetap nangkep GP pertama musim berikutnya.
       const [sessionsA, sessionsB, meetingsA, meetingsB] = await Promise.all([
         fetch(`https://api.openf1.org/v1/sessions?year=${year}`).then(r => r.json()),
         fetch(`https://api.openf1.org/v1/sessions?year=${year + 1}`).then(r => r.json()).catch(() => []),
@@ -296,7 +281,6 @@
       render({
         flagUrl: meeting ? meeting.country_flag : undefined,
         gpName: manual.gp || (meeting ? meeting.meeting_name : session.location),
-        round: manual.round || '',
         sessionName: manual.session || session.session_name,
         dateIso: manual.date || session.date_start,
       });
