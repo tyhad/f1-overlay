@@ -7,43 +7,30 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@800&family=Quicksand:wght@400&display=swap" rel="stylesheet">
 <style>
-  /* =========================================================================
-     PUSAT PENGATURAN DESAIN (Sesuai Spesifikasi)
-     ========================================================================= */
   :root {
-    /* FLAG: X:540px Y:1475px Size:100px */
-    --flag-x: 540px;
-    --flag-y: 1475px;
-    --flag-size: 100px;
+    /* POSISI SELURUH OVERLAY (Sesuaikan X dan Y kotak utamanya di sini) */
+    --overlay-x: 100px;
+    --overlay-y: 100px;
 
-    /* GP NAME: X:540px Y:1600px Size:80pt Font:Manrope ExtraBold */
-    --gp-x: 540px;
-    --gp-y: 1600px;
+    /* UKURAN FONT & ELEMEN */
+    --flag-size: 80px;
+    
     --gp-font: 'Manrope', sans-serif;
-    --gp-size: 80pt;
-    --gp-weight: 800;
+    --gp-size: 56px;
     --gp-color: #F2F1ED;
 
-    /* SESSION: X:540px Y:1675px Size: 75pt Font:Manrope ExtraBold */
-    --session-x: 540px;
-    --session-y: 1675px;
     --session-font: 'Manrope', sans-serif;
-    --session-size: 75pt;
-    --session-weight: 800;
+    --session-size: 48px;
 
-    /* Warna teks dinamis untuk Session */
+    --date-font: 'Quicksand', sans-serif;
+    --date-size: 32px;
+    --date-color: #A8ACB4;
+
+    /* WARNA TEMA SESSION */
     --accent-race:     #E10600;
     --accent-quali:    #F2B705;
     --accent-sprint:   #FF6A00;
     --accent-practice: #A8ACB4;
-
-    /* DATE: X:540px Y:1750px Size:50pt Font:Quicksand Regular */
-    --date-x: 540px;
-    --date-y: 1750px;
-    --date-font: 'Quicksand', sans-serif;
-    --date-size: 50pt;
-    --date-weight: 400;
-    --date-color: #A8ACB4;
   }
 
   html, body {
@@ -55,10 +42,15 @@
     height: 100vh;
   }
 
+  /* KOTAK UTAMA PENAMPUNG */
   #overlay {
-    position: relative;
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    left: var(--overlay-x);
+    top: var(--overlay-y);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px; /* Jarak teratur antarelemen */
     opacity: 0;
   }
 
@@ -72,18 +64,12 @@
 
   /* FLAG ELEMEN */
   .flag-emoji {
-    position: absolute;
-    left: var(--flag-x);
-    top: var(--flag-y);
     font-size: var(--flag-size);
     line-height: 1;
     filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
   }
 
   .flag-img {
-    position: absolute;
-    left: var(--flag-x);
-    top: var(--flag-y);
     height: var(--flag-size);
     width: auto;
     object-fit: contain;
@@ -93,33 +79,27 @@
 
   /* GP NAME ELEMEN */
   .gp-name {
-    position: absolute;
-    left: var(--gp-x);
-    top: var(--gp-y);
     font-family: var(--gp-font);
     font-size: var(--gp-size);
-    font-weight: var(--gp-weight);
+    font-weight: 800;
     color: var(--gp-color);
     letter-spacing: -0.02em;
     text-transform: uppercase;
     text-shadow: 0 2px 6px rgba(0,0,0,.6);
-    white-space: nowrap;
     line-height: 1;
+    margin: 0;
   }
 
   /* SESSION ELEMEN */
   .session-text {
-    position: absolute;
-    left: var(--session-x);
-    top: var(--session-y);
     font-family: var(--session-font);
     font-size: var(--session-size);
-    font-weight: var(--session-weight);
+    font-weight: 800;
     letter-spacing: -0.01em;
     text-transform: uppercase;
     line-height: 1;
-    white-space: nowrap;
     text-shadow: 0 2px 6px rgba(0,0,0,.6);
+    margin: 0;
   }
 
   .session-text.fp     { color: var(--accent-practice); }
@@ -129,16 +109,13 @@
 
   /* DATE ELEMEN */
   .date {
-    position: absolute;
-    left: var(--date-x);
-    top: var(--date-y);
     font-family: var(--date-font);
     font-size: var(--date-size);
-    font-weight: var(--date-weight);
+    font-weight: 400;
     color: var(--date-color);
     line-height: 1;
-    white-space: nowrap;
     text-shadow: 0 1px 4px rgba(0,0,0,.5);
+    margin: 0;
   }
 
   .flash { animation: flash .6s ease-out; }
@@ -153,7 +130,6 @@
   <div id="overlay">
     <div class="flag-emoji" id="flagEmoji">🏁</div>
     <img class="flag-img" id="flagImg" alt="flag">
-    
     <div class="gp-name" id="gpName">Grand Prix</div>
     <div class="session-text" id="sessionText">SESSION</div>
     <div class="date" id="date"></div>
