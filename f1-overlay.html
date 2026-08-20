@@ -5,28 +5,29 @@
 <title>F1 Watch-along Overlay</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@800&family=Quicksand:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@800&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* POSISI SELURUH OVERLAY (Sesuaikan X dan Y kotak utamanya di sini) */
-    --overlay-x: 100px;
-    --overlay-y: 100px;
+    /* UBAH JARAK DAN POSISI UTAMA DI SINI */
+    --padding-top: 40px;
+    --padding-left: 40px;
+    --gap-elements: 12px; /* Jarak vertikal antar-objek */
 
-    /* UKURAN FONT & ELEMEN */
-    --flag-size: 80px;
+    /* UKURAN ELEMEN (Proporsional untuk OBS) */
+    --flag-size: 64px;
     
     --gp-font: 'Manrope', sans-serif;
-    --gp-size: 56px;
+    --gp-size: 52px;
     --gp-color: #F2F1ED;
 
     --session-font: 'Manrope', sans-serif;
-    --session-size: 48px;
+    --session-size: 44px;
 
     --date-font: 'Quicksand', sans-serif;
-    --date-size: 32px;
+    --date-size: 28px;
     --date-color: #A8ACB4;
 
-    /* WARNA TEMA SESSION */
+    /* WARNA STATUS SESI */
     --accent-race:     #E10600;
     --accent-quali:    #F2B705;
     --accent-sprint:   #FF6A00;
@@ -42,15 +43,15 @@
     height: 100vh;
   }
 
-  /* KOTAK UTAMA PENAMPUNG */
+  /* KOTAK CONTAINER UTAMA */
   #overlay {
     position: absolute;
-    left: var(--overlay-x);
-    top: var(--overlay-y);
+    top: var(--padding-top);
+    left: var(--padding-left);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px; /* Jarak teratur antarelemen */
+    gap: var(--gap-elements);
     opacity: 0;
   }
 
@@ -66,15 +67,16 @@
   .flag-emoji {
     font-size: var(--flag-size);
     line-height: 1;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
   }
 
   .flag-img {
     height: var(--flag-size);
     width: auto;
     object-fit: contain;
+    border-radius: 4px;
     display: none;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
   }
 
   /* GP NAME ELEMEN */
@@ -83,9 +85,9 @@
     font-size: var(--gp-size);
     font-weight: 800;
     color: var(--gp-color);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
     text-transform: uppercase;
-    text-shadow: 0 2px 6px rgba(0,0,0,.6);
+    text-shadow: 0 3px 8px rgba(0,0,0,0.8);
     line-height: 1;
     margin: 0;
   }
@@ -98,7 +100,7 @@
     letter-spacing: -0.01em;
     text-transform: uppercase;
     line-height: 1;
-    text-shadow: 0 2px 6px rgba(0,0,0,.6);
+    text-shadow: 0 3px 8px rgba(0,0,0,0.8);
     margin: 0;
   }
 
@@ -111,17 +113,17 @@
   .date {
     font-family: var(--date-font);
     font-size: var(--date-size);
-    font-weight: 400;
+    font-weight: 600;
     color: var(--date-color);
     line-height: 1;
-    text-shadow: 0 1px 4px rgba(0,0,0,.5);
+    text-shadow: 0 2px 6px rgba(0,0,0,0.7);
     margin: 0;
   }
 
   .flash { animation: flash .6s ease-out; }
   @keyframes flash {
     0% { text-shadow: 0 0 20px rgba(255,255,255,.9); }
-    100% { text-shadow: 0 2px 6px rgba(0,0,0,.6); }
+    100% { text-shadow: 0 3px 8px rgba(0,0,0,0.8); }
   }
 </style>
 </head>
