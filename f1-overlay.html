@@ -10,10 +10,9 @@
   :root {
     /* UBAH JARAK DAN POSISI UTAMA DI SINI */
     --padding-top: 40px;
-    --padding-left: 40px;
     --gap-elements: 12px; /* Jarak vertikal antar-objek */
 
-    /* UKURAN ELEMEN (Proporsional untuk OBS) */
+    /* UKURAN ELEMEN */
     --flag-size: 64px;
     
     --gp-font: 'Manrope', sans-serif;
@@ -43,16 +42,20 @@
     height: 100vh;
   }
 
-  /* KOTAK CONTAINER UTAMA */
+  /* KOTAK CONTAINER UTAMA (ALIGNED TO CENTER) */
   #overlay {
     position: absolute;
     top: var(--padding-top);
-    left: var(--padding-left);
+    left: 50%;
+    transform: translateX(-50%); /* Membuat posisi horizontal persis di tengah layar */
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center; /* Posisikan semua anak elemen di tengah */
+    justify-content: center;
     gap: var(--gap-elements);
+    text-align: center; /* Teks rata tengah */
     opacity: 0;
+    width: 100%;
   }
 
   #overlay.show {
